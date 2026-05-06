@@ -21,30 +21,84 @@
       <section class="panel is-active" data-panel="focus">
         <p class="status-line">
           Status:
-          <span class="status-value" id="mode-status">Browsing</span>
+          <span class="status-value" id="mode-status">Ready</span>
+        </p>
+        <p class="status-line">
+          Phase:
+          <span class="status-value" id="phase-status">Focus</span>
         </p>
 
         <div class="timer-display" aria-live="polite">
           <span id="timer">25:00</span>
         </div>
 
-        <label class="toggle-row" for="work-toggle">
+        <div class="toggle-row">
           <span class="toggle-label">Work Mode</span>
-          <input id="work-toggle" type="checkbox" />
-          <span class="track" aria-hidden="true">
+          <button
+            id="work-toggle"
+            class="toggle-control"
+            type="button"
+            role="switch"
+            aria-checked="false"
+            aria-label="Toggle work mode"
+          >
+            <span class="track" aria-hidden="true">
             <span class="thumb"></span>
-          </span>
-        </label>
+            </span>
+          </button>
+        </div>
 
         <button class="reset-button" id="reset-timer" type="button">Reset Timer</button>
       </section>
 
       <section class="panel" data-panel="blocked">
-        <p class="placeholder">Blocked sites UI coming soon.</p>
+        <form id="blocked-form" class="inline-form">
+          <input id="blocked-input" type="text" placeholder="Add domain (e.g. reddit.com)" />
+          <button type="submit">Add</button>
+        </form>
+        <div class="blocked-list-container">
+          <ul id="blocked-list" class="blocked-list"></ul>
+        </div>
       </section>
 
       <section class="panel" data-panel="settings">
-        <p class="placeholder">Settings UI coming soon.</p>
+        <form id="settings-form" class="settings-form">
+          <label>
+            Focus (minutes)
+            <input id="focus-minutes" type="number" min="1" />
+          </label>
+          <label>
+            Short break (minutes)
+            <input id="short-break-minutes" type="number" min="1" />
+          </label>
+          <label>
+            Long break (minutes)
+            <input id="long-break-minutes" type="number" min="1" />
+          </label>
+          <label>
+            Focus sessions before long break
+            <input id="sessions-before-long-break" type="number" min="1" />
+          </label>
+          <div class="switch-row">
+            <span>Auto-cycle focus and breaks</span>
+            <button
+              id="auto-cycle-toggle"
+              class="toggle-control toggle-control-small"
+              type="button"
+              role="switch"
+              aria-checked="true"
+              aria-label="Toggle auto-cycle focus and breaks"
+            >
+              <span class="track" aria-hidden="true">
+                <span class="thumb"></span>
+              </span>
+            </button>
+          </div>
+          <div class="settings-actions">
+            <button type="submit">Save Settings</button>
+            <button id="reset-settings" type="button" class="ghost-button">Reset Defaults</button>
+          </div>
+        </form>
       </section>
     </main>
     <script src="../config.js"></script>

@@ -1,0 +1,38 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #0f121a;
+  color: #e6ebf9;
+}
+
+.wrap {
+  width: min(480px, 92vw);
+  border: 1px solid #2c3350;
+  border-radius: 12px;
+  background: #151a2b;
+  padding: 24px;
+  text-align: center;
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+h1 {
+  margin: 12px 0 8px;
+  font-size: 24px;
+}
+
+p {
+  margin: 0;
+  color: #afb8d3;
+}
