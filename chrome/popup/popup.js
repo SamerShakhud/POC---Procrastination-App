@@ -3,7 +3,9 @@ const DEFAULTS = globalThis.ProcProConfig?.defaults ?? {
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   sessionsBeforeLongBreak: 4,
-  autoCycle: true
+  autoCycle: true,
+  coneOfSilence: true,
+  statusNotifications: true
 };
 const DEFAULT_BLOCKED_SITES = globalThis.ProcProConfig?.defaultBlockedSites ?? [];
 
@@ -30,6 +32,8 @@ const shortBreakMinutesInput = document.getElementById("short-break-minutes");
 const longBreakMinutesInput = document.getElementById("long-break-minutes");
 const sessionsBeforeLongBreakInput = document.getElementById("sessions-before-long-break");
 const autoCycleToggle = document.getElementById("auto-cycle-toggle");
+const coneOfSilenceToggle = document.getElementById("cone-of-silence-toggle");
+const statusNotificationsToggle = document.getElementById("status-notifications-toggle");
 
 let liveState = null;
 let timerIntervalId;
@@ -92,6 +96,8 @@ const renderSettings = (settings) => {
   longBreakMinutesInput.value = settings.longBreakMinutes;
   sessionsBeforeLongBreakInput.value = settings.sessionsBeforeLongBreak;
   autoCycleToggle.setAttribute("aria-checked", String(settings.autoCycle));
+  coneOfSilenceToggle.setAttribute("aria-checked", String(settings.coneOfSilence));
+  statusNotificationsToggle.setAttribute("aria-checked", String(settings.statusNotifications));
 };
 
 const renderTimer = () => {
@@ -166,12 +172,24 @@ autoCycleToggle.addEventListener("click", () => {
   autoCycleToggle.setAttribute("aria-checked", String(!isEnabled));
 });
 
-autoCycleToggle.addEventListener("keydown", (event) => {
-  if (event.key !== " " && event.key !== "Enter") {
-    return;
-  }
-  event.preventDefault();
-  autoCycleToggle.click();
+coneOfSilenceToggle.addEventListener("click", () => {
+  const isEnabled = coneOfSilenceToggle.getAttribute("aria-checked") === "true";
+  coneOfSilenceToggle.setAttribute("aria-checked", String(!isEnabled));
+});
+
+statusNotificationsToggle.addEventListener("click", () => {
+  const isEnabled = statusNotificationsToggle.getAttribute("aria-checked") === "true";
+  statusNotificationsToggle.setAttribute("aria-checked", String(!isEnabled));
+});
+
+[autoCycleToggle, coneOfSilenceToggle, statusNotificationsToggle].forEach((settingToggle) => {
+  settingToggle.addEventListener("keydown", (event) => {
+    if (event.key !== " " && event.key !== "Enter") {
+      return;
+    }
+    event.preventDefault();
+    settingToggle.click();
+  });
 });
 
 resetButton.addEventListener("click", async () => {
@@ -210,7 +228,9 @@ settingsForm.addEventListener("submit", async (event) => {
     shortBreakMinutes: Number(shortBreakMinutesInput.value || DEFAULTS.shortBreakMinutes),
     longBreakMinutes: Number(longBreakMinutesInput.value || DEFAULTS.longBreakMinutes),
     sessionsBeforeLongBreak: Number(sessionsBeforeLongBreakInput.value || DEFAULTS.sessionsBeforeLongBreak),
-    autoCycle: autoCycleToggle.getAttribute("aria-checked") === "true"
+    autoCycle: autoCycleToggle.getAttribute("aria-checked") === "true",
+    coneOfSilence: coneOfSilenceToggle.getAttribute("aria-checked") === "true",
+    statusNotifications: statusNotificationsToggle.getAttribute("aria-checked") === "true"
   };
   await sendMessage({ type: "UPDATE_SETTINGS", settings });
   await refreshState();

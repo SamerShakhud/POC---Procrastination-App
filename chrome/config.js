@@ -4,7 +4,9 @@ globalThis.ProcProConfig = {
     shortBreakMinutes: 5,
     longBreakMinutes: 15,
     sessionsBeforeLongBreak: 4,
-    autoCycle: true
+    autoCycle: true,
+    coneOfSilence: true,
+    statusNotifications: true
   },
   defaultBlockedSites: [
     // --- Social Media & Networking ---

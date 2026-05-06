@@ -233,6 +233,17 @@ body.work-on .status-value {
   background: #1a2136;
 }
 
+.settings-form .toggle-control {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.settings-form .toggle-control:hover {
+  border-color: transparent;
+  background: transparent;
+}
+
 .blocked-list {
   margin: 0;
   padding: 0;

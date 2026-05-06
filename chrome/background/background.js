@@ -11,7 +11,9 @@ const DEFAULT_SETTINGS = {
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   sessionsBeforeLongBreak: 4,
-  autoCycle: true
+  autoCycle: true,
+  coneOfSilence: true,
+  statusNotifications: true
 };
 
 const DEFAULT_BLOCKED_SITES = ["youtube.com", "instagram.com", "x.com", "tiktok.com"];
@@ -20,8 +22,21 @@ const getNotificationIconUrl = () => chrome.runtime.getURL("logo.png");
 const getBlockedPageUrl = (site) =>
   `${chrome.runtime.getURL("blocked/blocked.html")}?site=${encodeURIComponent(site)}`;
 
-const notify = async (title, message) => {
+const clearProcProNotifications = async () => {
+  const notifications = await chrome.notifications.getAll();
+  await Promise.all(Object.keys(notifications).map((id) => chrome.notifications.clear(id)));
+};
+
+const notify = async (title, message, settings) => {
+  if (!settings.statusNotifications) {
+    return;
+  }
+
   try {
+    if (settings.coneOfSilence) {
+      await clearProcProNotifications();
+    }
+
     await chrome.notifications.create({
       type: "basic",
       iconUrl: getNotificationIconUrl(),
@@ -65,7 +80,9 @@ const sanitizeSettings = (raw = {}) => {
     sessionsBeforeLongBreak: Number.isFinite(sessionsBeforeLongBreak)
       ? Math.max(1, Math.round(sessionsBeforeLongBreak))
       : DEFAULT_SETTINGS.sessionsBeforeLongBreak,
-    autoCycle: Boolean(raw.autoCycle)
+    autoCycle: raw.autoCycle ?? DEFAULT_SETTINGS.autoCycle,
+    coneOfSilence: raw.coneOfSilence ?? DEFAULT_SETTINGS.coneOfSilence,
+    statusNotifications: raw.statusNotifications ?? DEFAULT_SETTINGS.statusNotifications
   };
 };
 
@@ -137,7 +154,7 @@ const advancePhase = async () => {
     const isLongBreak = nextCompleted % settings.sessionsBeforeLongBreak === 0;
     const nextPhase = isLongBreak ? "longBreak" : "shortBreak";
 
-    await notify("Focus done", isLongBreak ? "Great run. Take a long break." : "Nice work. Take a short break.");
+    await notify("Focus done", isLongBreak ? "Great run. Take a long break." : "Nice work. Take a short break.", settings);
 
     if (!settings.autoCycle) {
       await stopWorkMode();
@@ -148,7 +165,7 @@ const advancePhase = async () => {
     return;
   }
 
-  await notify("Break done", "Back to focus.");
+  await notify("Break done", "Back to focus.", settings);
 
   if (!settings.autoCycle) {
     await stopWorkMode();
@@ -174,8 +191,8 @@ const isBlockedUrl = (url, blockedSites) => {
 };
 
 const enforceBlocking = async (tabId, url) => {
-  const { isWorkModeActive, blockedSites } = await getState();
-  if (!isWorkModeActive || !isBlockedUrl(url, blockedSites)) {
+  const { isWorkModeActive, phase, blockedSites } = await getState();
+  if (!isWorkModeActive || phase !== "focus" || !isBlockedUrl(url, blockedSites)) {
     return;
   }
 
@@ -220,17 +237,26 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
     if (message.type === "START_WORK_MODE") {
       await startPhase("focus", 0);
+      const state = await getState();
+      await notify(
+        "Deep Work started",
+        state.settings.coneOfSilence ? "Cone of Silence is active." : "Focus timer is running.",
+        state.settings
+      );
       return getState();
     }
 
     if (message.type === "STOP_WORK_MODE") {
+      const state = await getState();
       await stopWorkMode();
+      await notify("Work Mode stopped", "Focus session reset.", state.settings);
       return getState();
     }
 
     if (message.type === "UPDATE_SETTINGS") {
       const nextSettings = sanitizeSettings(message.settings || {});
       await chrome.storage.local.set({ [SETTINGS_KEY]: nextSettings });
+      await notify("Settings saved", "Notification preferences updated.", nextSettings);
       return getState();
     }
 
@@ -243,6 +269,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         [SETTINGS_KEY]: nextSettings,
         [BLOCKED_SITES_KEY]: nextBlockedSites.length ? nextBlockedSites : DEFAULT_BLOCKED_SITES
       });
+      await notify("Defaults restored", "ProcPro settings are back to default.", nextSettings);
       return getState();
     }
 
