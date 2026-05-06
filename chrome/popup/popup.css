@@ -109,6 +109,34 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid #2c3350;
+  border-radius: 8px;
+  background: #14192a;
+  padding: 8px 10px;
+}
+
+.stat-value {
+  color: #f3f6ff;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  color: #a7afc7;
+  font-size: 11px;
+}
+
 .toggle-row {
   display: flex;
   align-items: center;

@@ -19,6 +19,8 @@ const toggle = document.getElementById("work-toggle");
 const modeStatus = document.getElementById("mode-status");
 const phaseStatus = document.getElementById("phase-status");
 const timer = document.getElementById("timer");
+const blockedAttempts = document.getElementById("blocked-attempts");
+const focusHours = document.getElementById("focus-hours");
 const resetButton = document.getElementById("reset-timer");
 const tabs = Array.from(document.querySelectorAll(".tab"));
 const panels = Array.from(document.querySelectorAll(".panel"));
@@ -46,6 +48,18 @@ const formatTime = (milliseconds) => {
   const seconds = String(totalSeconds % 60).padStart(2, "0");
   return `${minutes}:${seconds}`;
 };
+
+const getVisibleFocusMilliseconds = (state) => {
+  const savedFocusMs = state.focusedMilliseconds || 0;
+
+  if (!state.isWorkModeActive || state.phase !== "focus" || !state.phaseStartedAt) {
+    return savedFocusMs;
+  }
+
+  return savedFocusMs + Math.max(0, Date.now() - state.phaseStartedAt);
+};
+
+const formatFocusHours = (milliseconds) => `${(milliseconds / 3600000).toFixed(1)}h`;
 
 const setActiveTab = (tabName) => {
   tabs.forEach((tab) => {
@@ -114,6 +128,15 @@ const renderTimer = () => {
   timer.textContent = formatTime(liveState.phaseEndAt - Date.now());
 };
 
+const renderStats = (state) => {
+  if (!state) {
+    return;
+  }
+
+  blockedAttempts.textContent = String(state.blockedSiteAttempts || 0);
+  focusHours.textContent = formatFocusHours(getVisibleFocusMilliseconds(state));
+};
+
 const render = (state) => {
   liveState = state;
 
@@ -122,6 +145,7 @@ const render = (state) => {
   modeStatus.textContent = state.isWorkModeActive ? "Working" : "Ready";
   phaseStatus.textContent = PHASE_LABELS[state.phase] || "Focus";
   renderTimer();
+  renderStats(state);
   renderBlockedSites(state.blockedSites || []);
   renderSettings(state.settings || DEFAULTS);
 };
@@ -131,10 +155,12 @@ const startTimerTicker = () => {
   timerIntervalId = setInterval(async () => {
     if (!liveState?.isWorkModeActive || !liveState.phaseEndAt) {
       renderTimer();
+      renderStats(liveState);
       return;
     }
 
     renderTimer();
+    renderStats(liveState);
 
     if (liveState.phaseEndAt <= Date.now()) {
       const state = await sendMessage({ type: "GET_APP_STATE" });
@@ -243,6 +269,16 @@ resetSettingsButton.addEventListener("click", async () => {
     blockedSites: DEFAULT_BLOCKED_SITES
   });
   await refreshState();
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  const shouldRefreshStats =
+    areaName === "local" &&
+    (changes.blockedSiteAttempts || changes.focusedMilliseconds || changes.pomodoroPhaseStartedAt);
+
+  if (shouldRefreshStats) {
+    refreshState();
+  }
 });
 
 const init = async () => {

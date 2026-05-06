@@ -1,9 +1,12 @@
 const WORK_MODE_KEY = "isWorkModeActive";
 const PHASE_KEY = "pomodoroPhase";
+const PHASE_START_KEY = "pomodoroPhaseStartedAt";
 const PHASE_END_KEY = "pomodoroPhaseEndAt";
 const SETTINGS_KEY = "pomodoroSettings";
 const BLOCKED_SITES_KEY = "blockedSites";
 const COMPLETED_SESSIONS_KEY = "completedFocusSessions";
+const BLOCKED_ATTEMPTS_KEY = "blockedSiteAttempts";
+const FOCUSED_MS_KEY = "focusedMilliseconds";
 const ALARM_NAME = "proproc-phase-alarm";
 
 const DEFAULT_SETTINGS = {
@@ -63,6 +66,14 @@ const normalizeDomain = (value) => {
   }
 };
 
+const incrementStoredNumber = async (key, amount = 1) => {
+  const stored = await chrome.storage.local.get(key);
+  const currentValue = Number(stored[key]) || 0;
+  const nextValue = currentValue + amount;
+  await chrome.storage.local.set({ [key]: nextValue });
+  return nextValue;
+};
+
 const sanitizeSettings = (raw = {}) => {
   const focusMinutes = Number(raw.focusMinutes);
   const shortBreakMinutes = Number(raw.shortBreakMinutes);
@@ -90,10 +101,13 @@ const getState = async () => {
   const stored = await chrome.storage.local.get([
     WORK_MODE_KEY,
     PHASE_KEY,
+    PHASE_START_KEY,
     PHASE_END_KEY,
     SETTINGS_KEY,
     BLOCKED_SITES_KEY,
-    COMPLETED_SESSIONS_KEY
+    COMPLETED_SESSIONS_KEY,
+    BLOCKED_ATTEMPTS_KEY,
+    FOCUSED_MS_KEY
   ]);
 
   const settings = sanitizeSettings(stored[SETTINGS_KEY] || DEFAULT_SETTINGS);
@@ -103,10 +117,13 @@ const getState = async () => {
   return {
     isWorkModeActive: Boolean(stored[WORK_MODE_KEY]),
     phase: stored[PHASE_KEY] || "focus",
+    phaseStartedAt: Number(stored[PHASE_START_KEY]) || null,
     phaseEndAt: Number(stored[PHASE_END_KEY]) || null,
     settings,
     blockedSites,
-    completedFocusSessions: Number(stored[COMPLETED_SESSIONS_KEY]) || 0
+    completedFocusSessions: Number(stored[COMPLETED_SESSIONS_KEY]) || 0,
+    blockedSiteAttempts: Number(stored[BLOCKED_ATTEMPTS_KEY]) || 0,
+    focusedMilliseconds: Number(stored[FOCUSED_MS_KEY]) || 0
   };
 };
 
@@ -124,12 +141,14 @@ const getDurationMsForPhase = (phase, settings) => {
 
 const startPhase = async (phase, completedFocusSessions) => {
   const { settings } = await getState();
-  const phaseEndAt = Date.now() + getDurationMsForPhase(phase, settings);
+  const phaseStartedAt = Date.now();
+  const phaseEndAt = phaseStartedAt + getDurationMsForPhase(phase, settings);
 
   await chrome.alarms.create(ALARM_NAME, { when: phaseEndAt });
   await chrome.storage.local.set({
     [WORK_MODE_KEY]: true,
     [PHASE_KEY]: phase,
+    [PHASE_START_KEY]: phaseStartedAt,
     [PHASE_END_KEY]: phaseEndAt,
     [COMPLETED_SESSIONS_KEY]: completedFocusSessions
   });
@@ -140,6 +159,7 @@ const stopWorkMode = async () => {
   await chrome.storage.local.set({
     [WORK_MODE_KEY]: false,
     [PHASE_KEY]: "focus",
+    [PHASE_START_KEY]: null,
     [PHASE_END_KEY]: null,
     [COMPLETED_SESSIONS_KEY]: 0
   });
@@ -147,13 +167,15 @@ const stopWorkMode = async () => {
 
 const advancePhase = async () => {
   const state = await getState();
-  const { phase, settings, completedFocusSessions } = state;
+  const { phase, phaseStartedAt, phaseEndAt, settings, completedFocusSessions } = state;
 
   if (phase === "focus") {
     const nextCompleted = completedFocusSessions + 1;
     const isLongBreak = nextCompleted % settings.sessionsBeforeLongBreak === 0;
     const nextPhase = isLongBreak ? "longBreak" : "shortBreak";
 
+    const completedFocusMs = Math.max(0, phaseEndAt - phaseStartedAt);
+    await incrementStoredNumber(FOCUSED_MS_KEY, completedFocusMs);
     await notify("Focus done", isLongBreak ? "Great run. Take a long break." : "Nice work. Take a short break.", settings);
 
     if (!settings.autoCycle) {
@@ -197,19 +219,29 @@ const enforceBlocking = async (tabId, url) => {
   }
 
   const domain = new URL(url).hostname.replace(/^www\./, "");
+  await incrementStoredNumber(BLOCKED_ATTEMPTS_KEY);
   await chrome.tabs.update(tabId, { url: getBlockedPageUrl(domain) });
 };
 
 chrome.runtime.onInstalled.addListener(async () => {
-  const current = await chrome.storage.local.get([SETTINGS_KEY, BLOCKED_SITES_KEY, WORK_MODE_KEY]);
+  const current = await chrome.storage.local.get([
+    SETTINGS_KEY,
+    BLOCKED_SITES_KEY,
+    WORK_MODE_KEY,
+    BLOCKED_ATTEMPTS_KEY,
+    FOCUSED_MS_KEY
+  ]);
   await chrome.storage.local.set({
     appName: "ProcPro",
     [SETTINGS_KEY]: sanitizeSettings(current[SETTINGS_KEY] || DEFAULT_SETTINGS),
     [BLOCKED_SITES_KEY]: Array.isArray(current[BLOCKED_SITES_KEY]) ? current[BLOCKED_SITES_KEY] : DEFAULT_BLOCKED_SITES,
     [WORK_MODE_KEY]: Boolean(current[WORK_MODE_KEY]),
     [PHASE_KEY]: "focus",
+    [PHASE_START_KEY]: null,
     [PHASE_END_KEY]: null,
-    [COMPLETED_SESSIONS_KEY]: 0
+    [COMPLETED_SESSIONS_KEY]: 0,
+    [BLOCKED_ATTEMPTS_KEY]: Number(current[BLOCKED_ATTEMPTS_KEY]) || 0,
+    [FOCUSED_MS_KEY]: Number(current[FOCUSED_MS_KEY]) || 0
   });
 });
 
