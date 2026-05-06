@@ -1,0 +1,27 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  min-width: 280px;
+  min-height: 160px;
+  background: #101218;
+  color: #f4f6fc;
+}
+
+.app {
+  padding: 16px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+p {
+  margin: 0;
+  font-size: 14px;
+  color: #b7c0d9;
+}

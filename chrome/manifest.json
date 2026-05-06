@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "ProcPro",
+  "version": "0.0.1",
+  "description": "ProcPro is an anti-procrastination Chrome extension.",
+  "icons": {
+    "16": "logo.png",
+    "32": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
+  "action": {
+    "default_title": "ProcPro",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "logo.png",
+      "32": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
+    }
+  },
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "permissions": [
+    "storage"
+  ]
+}
