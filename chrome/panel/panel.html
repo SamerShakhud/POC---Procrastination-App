@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ProProc Live Panel</title>
+    <link rel="stylesheet" href="./panel.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="title-row">
+        <img class="title-logo" src="../logo.png" alt="ProProc logo" />
+        <h1>ProProc Live</h1>
+      </header>
+
+      <p class="status-line">
+        Status:
+        <span class="status-value" id="mode-status">Ready</span>
+      </p>
+      <p class="status-line">
+        Phase:
+        <span class="status-value" id="phase-status">Focus</span>
+      </p>
+
+      <div class="timer-display" aria-live="polite">
+        <span id="timer">25:00</span>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Work Mode</span>
+        <button
+          id="work-toggle"
+          class="toggle-control"
+          type="button"
+          role="switch"
+          aria-checked="false"
+          aria-label="Toggle work mode"
+        >
+          <span class="track" aria-hidden="true">
+            <span class="thumb"></span>
+          </span>
+        </button>
+      </div>
+    </main>
+    <script src="../config.js"></script>
+    <script src="./panel.js"></script>
+  </body>
+</html>

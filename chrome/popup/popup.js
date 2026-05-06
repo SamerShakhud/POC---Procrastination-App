@@ -36,6 +36,8 @@ const sessionsBeforeLongBreakInput = document.getElementById("sessions-before-lo
 const autoCycleToggle = document.getElementById("auto-cycle-toggle");
 const coneOfSilenceToggle = document.getElementById("cone-of-silence-toggle");
 const statusNotificationsToggle = document.getElementById("status-notifications-toggle");
+const openPopoutButton = document.getElementById("open-popout");
+const closePopoutButton = document.getElementById("close-popout");
 
 let liveState = null;
 let timerIntervalId;
@@ -260,6 +262,14 @@ settingsForm.addEventListener("submit", async (event) => {
   };
   await sendMessage({ type: "UPDATE_SETTINGS", settings });
   await refreshState();
+});
+
+openPopoutButton.addEventListener("click", async () => {
+  await sendMessage({ type: "OPEN_POPOUT_PANEL" });
+});
+
+closePopoutButton.addEventListener("click", async () => {
+  await sendMessage({ type: "CLOSE_POPOUT_PANEL" });
 });
 
 resetSettingsButton.addEventListener("click", async () => {

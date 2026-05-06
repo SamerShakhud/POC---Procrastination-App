@@ -7,6 +7,7 @@ const BLOCKED_SITES_KEY = "blockedSites";
 const COMPLETED_SESSIONS_KEY = "completedFocusSessions";
 const BLOCKED_ATTEMPTS_KEY = "blockedSiteAttempts";
 const FOCUSED_MS_KEY = "focusedMilliseconds";
+const POPOUT_WINDOW_ID_KEY = "popoutWindowId";
 const ALARM_NAME = "proproc-phase-alarm";
 
 const DEFAULT_SETTINGS = {
@@ -49,6 +50,49 @@ const notify = async (title, message, settings) => {
   } catch (error) {
     console.error("Failed to show notification:", error);
   }
+};
+
+const getPopoutUrl = () => chrome.runtime.getURL("panel/panel.html");
+
+const getWindowIfExists = async (windowId) => {
+  if (!windowId) {
+    return null;
+  }
+  try {
+    return await chrome.windows.get(windowId);
+  } catch {
+    return null;
+  }
+};
+
+const openPopoutWindow = async () => {
+  const stored = await chrome.storage.local.get(POPOUT_WINDOW_ID_KEY);
+  const existingWindow = await getWindowIfExists(stored[POPOUT_WINDOW_ID_KEY]);
+  if (existingWindow) {
+    await chrome.windows.update(existingWindow.id, { focused: true });
+    return existingWindow;
+  }
+
+  const createdWindow = await chrome.windows.create({
+    url: getPopoutUrl(),
+    type: "popup",
+    width: 380,
+    height: 330,
+    focused: true
+  });
+
+  await chrome.storage.local.set({ [POPOUT_WINDOW_ID_KEY]: createdWindow.id });
+
+  return createdWindow;
+};
+
+const closePopoutWindow = async () => {
+  const stored = await chrome.storage.local.get(POPOUT_WINDOW_ID_KEY);
+  const existingWindow = await getWindowIfExists(stored[POPOUT_WINDOW_ID_KEY]);
+  if (existingWindow) {
+    await chrome.windows.remove(existingWindow.id);
+  }
+  await chrome.storage.local.set({ [POPOUT_WINDOW_ID_KEY]: null });
 };
 
 const normalizeDomain = (value) => {
@@ -253,6 +297,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   enforceBlocking(tabId, changeInfo.url);
 });
 
+chrome.windows.onRemoved.addListener(async (windowId) => {
+  const stored = await chrome.storage.local.get(POPOUT_WINDOW_ID_KEY);
+  if (stored[POPOUT_WINDOW_ID_KEY] === windowId) {
+    await chrome.storage.local.set({ [POPOUT_WINDOW_ID_KEY]: null });
+  }
+});
+
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name !== ALARM_NAME) {
     return;
@@ -323,6 +374,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       const nextBlockedSites = state.blockedSites.filter((domain) => domain !== targetDomain);
       await chrome.storage.local.set({ [BLOCKED_SITES_KEY]: nextBlockedSites });
       return getState();
+    }
+
+    if (message.type === "OPEN_POPOUT_PANEL") {
+      const win = await openPopoutWindow();
+      return { ok: true, windowId: win.id };
+    }
+
+    if (message.type === "CLOSE_POPOUT_PANEL") {
+      await closePopoutWindow();
+      return { ok: true };
     }
 
     return { ok: false };
