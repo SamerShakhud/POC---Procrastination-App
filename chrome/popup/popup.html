@@ -24,6 +24,10 @@
           <span class="status-value" id="mode-status">Browsing</span>
         </p>
 
+        <div class="timer-display" aria-live="polite">
+          <span id="timer">25:00</span>
+        </div>
+
         <label class="toggle-row" for="work-toggle">
           <span class="toggle-label">Work Mode</span>
           <input id="work-toggle" type="checkbox" />
@@ -31,6 +35,8 @@
             <span class="thumb"></span>
           </span>
         </label>
+
+        <button class="reset-button" id="reset-timer" type="button">Reset Timer</button>
       </section>
 
       <section class="panel" data-panel="blocked">
@@ -41,6 +47,7 @@
         <p class="placeholder">Settings UI coming soon.</p>
       </section>
     </main>
+    <script src="../config.js"></script>
     <script src="./popup.js"></script>
   </body>
 </html>
