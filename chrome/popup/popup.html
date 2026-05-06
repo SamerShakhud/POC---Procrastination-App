@@ -8,8 +8,38 @@
   </head>
   <body>
     <main class="app">
-      <h1>ProcPro</h1>
-      <p>Base extension is ready.</p>
+      <header class="title-row">
+        <img class="title-logo" src="../logo.png" alt="ProProc logo" />
+        <h1>ProProc</h1>
+      </header>
+      <nav class="tabs" aria-label="Popup sections">
+        <button class="tab is-active" type="button" data-tab="focus">Focus</button>
+        <button class="tab" type="button" data-tab="blocked">Blocked</button>
+        <button class="tab" type="button" data-tab="settings">Settings</button>
+      </nav>
+
+      <section class="panel is-active" data-panel="focus">
+        <p class="status-line">
+          Status:
+          <span class="status-value" id="mode-status">Browsing</span>
+        </p>
+
+        <label class="toggle-row" for="work-toggle">
+          <span class="toggle-label">Work Mode</span>
+          <input id="work-toggle" type="checkbox" />
+          <span class="track" aria-hidden="true">
+            <span class="thumb"></span>
+          </span>
+        </label>
+      </section>
+
+      <section class="panel" data-panel="blocked">
+        <p class="placeholder">Blocked sites UI coming soon.</p>
+      </section>
+
+      <section class="panel" data-panel="settings">
+        <p class="placeholder">Settings UI coming soon.</p>
+      </section>
     </main>
     <script src="./popup.js"></script>
   </body>

@@ -4,24 +4,150 @@
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  min-width: 280px;
-  min-height: 160px;
-  background: #101218;
-  color: #f4f6fc;
+  font-family: "Segoe UI", Arial, sans-serif;
+  min-width: 260px;
+  min-height: 140px;
+  background: #10131b;
+  color: #e7ebf7;
 }
 
 .app {
-  padding: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 h1 {
-  margin: 0 0 8px;
-  font-size: 20px;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
 }
 
-p {
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-logo {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.status-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9eb0ff;
+}
+
+.status-line {
   margin: 0;
-  font-size: 14px;
-  color: #b7c0d9;
+  font-size: 12px;
+  color: #a7afc7;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.tab {
+  border: 1px solid #2c3350;
+  background: #14192a;
+  color: #c5cce4;
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.tab.is-active {
+  color: #f3f6ff;
+  border-color: #4a5783;
+  background: #1a2136;
+}
+
+.panel {
+  display: none;
+}
+
+.panel.is-active {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #2c3350;
+  border-radius: 10px;
+  background: #14192a;
+  cursor: pointer;
+}
+
+.toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #dce3fa;
+}
+
+.toggle-row input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.track {
+  position: relative;
+  margin-left: auto;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #2c3450;
+  border: 1px solid #3d496f;
+  transition: background-color 160ms ease;
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f3f6ff;
+  transition: transform 160ms ease;
+}
+
+body.work-on .status-value {
+  color: #6bd7aa;
+}
+
+body.work-on .toggle-row {
+  border-color: #2b6b57;
+  background: #10231f;
+}
+
+body.work-on .track {
+  background: #1f8e67;
+}
+
+body.work-on .thumb {
+  transform: translateX(18px);
+}
+
+.placeholder {
+  margin: 0;
+  font-size: 12px;
+  color: #a7afc7;
+  border: 1px dashed #2c3350;
+  border-radius: 8px;
+  padding: 10px;
 }
